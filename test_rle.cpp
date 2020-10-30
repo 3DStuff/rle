@@ -20,7 +20,7 @@ std::vector<int> test_io(std::vector<int> v) {
 
     rle_io<int> in_rle;
     in_rle.from_file("tmp.rle");
-    return in_rle.rle().decode();
+    return in_rle.get().decode();
 }
 
 std::vector<int> enc1(std::vector<int> v) {

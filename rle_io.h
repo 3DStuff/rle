@@ -24,7 +24,7 @@ public:
     }
 
     //! return simple and plain rle data
-    const rle<base_t> &rle() const {
+    const rle<base_t> &get() const {
         return _rle;
     }
 
