@@ -4,6 +4,7 @@
 #include <iostream>
 #include <gtest/gtest.h> // googletest header file
 
+using namespace compress;
 
 std::vector<int> ref1 = { 0,1,2,3,4 };
 std::vector<int> ref2 = { 0,0 };
