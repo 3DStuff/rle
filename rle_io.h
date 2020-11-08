@@ -57,6 +57,7 @@ namespace compress {
                 f.read((char*)&chunk, sizeof(rle_chunk<base_t>));
                 _rle.data()._chunks.push_back(chunk);
             }
+            _rle.compute_lookup();
         }
 
         void to_file(const std::string &file) {
