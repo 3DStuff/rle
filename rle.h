@@ -38,7 +38,6 @@ namespace compress {
         using chunk_t = rle_chunk<base_t>;
 
         // speeding up search a bit
-        using rle_iter_t = std::vector<rle_chunk<base_t>>::const_iterator;
         std::map<size_t, size_t> _lookups;
         size_t _last_div = 0;
 

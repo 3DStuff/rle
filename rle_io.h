@@ -15,7 +15,7 @@ namespace compress {
 
     public:
         rle_io() = default;
-        rle_io(rle<base_t> &rle, const std::vector<size_t> &meta = {}) 
+        rle_io(const rle<base_t> &rle, const std::vector<size_t> &meta = {}) 
         : _rle(rle), _meta(meta) 
         {}
 
