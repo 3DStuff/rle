@@ -30,6 +30,11 @@ namespace compress {
         size_t _uncompressed_size = 0;
     };
 
+    struct iter_info {
+        size_t block_end;
+        size_t iter_distance;
+    };
+
     template<class base_t>
     class rle {
         template<class T> friend class rle_io;
@@ -38,8 +43,11 @@ namespace compress {
         using chunk_t = rle_chunk<base_t>;
 
         // speeding up search a bit
-        std::map<size_t, size_t> _lookups;
-        size_t _last_div = 0;
+        std::vector<iter_info> _lookups = {{ 0, 0 }};
+
+        static size_t get_step(size_t size_arr, size_t divider = 5) {
+            return size_arr / divider + 1;
+        }
 
     protected:
         void init(const base_t &val) {
@@ -51,32 +59,22 @@ namespace compress {
         // we can greatly reduce search time for a value
         // if we directly start from the mid of the list if possible
         void compute_lookup() {
-            size_t num_chunks = _rle._chunks.size();
-            size_t div = (std::sqrt((float)num_chunks) / 5) + 1;
-            size_t step = num_chunks / div;
-
-            if(div == _last_div) 
+            const size_t num_chunks = _rle._chunks.size();
+            const size_t step = 192;
+            if(2 * _lookups.size() >= num_chunks / step) {
                 return;
-
-            std::vector<size_t> stop_ids;
-            for(int i = step; i < num_chunks; i += step) {
-                if(num_chunks - i >= step) {
-                    stop_ids.push_back(i);
-                }
             }
+            _lookups = {{ 0, 0 }};
 
-            size_t cur_id = 0;
-            auto cur_itr = _rle._chunks.begin();
-            for (auto itr = this->begin(); itr != this->end(); itr++) {
-                for(size_t stop_id : stop_ids) {
-                    const size_t dist = std::distance(this->begin(), itr);
-                    if(dist == stop_id) {
-                        _lookups[cur_id] = dist;
+            size_t block_end = 0;
+            for(size_t i = 0; i != _rle._chunks.size(); i++) {
+                for(size_t j = step; j < num_chunks; j += step) {
+                    if(i == j) {
+                        _lookups.push_back({block_end, i});
                     }
                 }
-                cur_id += itr->_repetitions;
+                block_end += _rle._chunks[i]._repetitions;
             }
-            _last_div = div;
         }
 
         void add(const base_t &val) {
@@ -116,33 +114,77 @@ namespace compress {
         }
 
         const auto at(const size_t id) const {
-            size_t chunk_end = 0;
-            auto chunk_it = this->begin();
-
-            auto start_it = _lookups.rbegin();
-            auto end_it = _lookups.rend();
-            if(id < _rle._uncompressed_size / 2) {
-                auto start_it = _lookups.begin();
-                auto end_it = _lookups.end();
-            }
-
-            for(; start_it != end_it; start_it++) {
-                const size_t unpacked_id = start_it->first;
-                const size_t iterator_dist = start_it->second;
-
-                if(id < unpacked_id) continue;
-                std::advance(chunk_it, iterator_dist);
-                chunk_end = unpacked_id;
-                break;
-            }
-
-            for (; chunk_it != this->end(); chunk_it++) {
-                chunk_end += chunk_it->_repetitions;
-                if(id >= chunk_end) {
-                    continue;
+            size_t adv = 0;
+            size_t end = 0;
+            if(id < _rle._uncompressed_size/2 || _lookups.size() < 128) {
+                for(int i = 0; i < _lookups.size(); i++) {
+                    if(id < _lookups[i].block_end) {
+                        break;
+                    }
+                    adv = _lookups[i].iter_distance;
+                    end = _lookups[i].block_end;
                 }
-                return chunk_it;
-            } 
+            }
+            else {
+                for(int i = _lookups.size()-1; i >= 0; i--) {
+                    adv = _lookups[i].iter_distance;
+                    end = _lookups[i].block_end;
+                    if(id > _lookups[i].block_end) {
+                        break;
+                    }
+                }
+            }
+/*
+            bool smaller = false;
+            bool bigger = false;
+            if(_lookups.size() > 1) {
+                for(int i = _lookups.size()/2; i < _lookups.size() && i >= 0;) {
+                    size_t loc_end = _lookups[i].block_end;
+                    if(id == loc_end) {
+                        adv = _lookups[i].iter_distance;
+                        end = loc_end;
+                        break;
+                    }
+                    else if(id < loc_end && !bigger) {
+                        smaller = true;
+                        i--;
+                        continue;
+                    }
+                    else if(id > loc_end && !smaller) {
+                        bigger = true;
+                        i++;
+                        continue;
+                    }
+
+                    if(smaller) {
+                        adv = _lookups[i].iter_distance;
+                        end = loc_end;
+                        break;
+                    }
+                    if(bigger) {
+                        adv = _lookups[i-1].iter_distance;
+                        end = loc_end;
+                        break;
+                    }
+                }
+            }
+*/
+/*
+            for(int i = 0; i < _lookups.size(); i++) {
+                if(id < _lookups[i].block_end) {
+                    break;
+                }
+                adv = _lookups[i].iter_distance;
+                end = _lookups[i].block_end;
+            }
+*/
+            auto chunk_it = this->begin();
+            for(int i = adv; i < _rle._chunks.size(); i++) {
+                end += _rle._chunks[i]._repetitions;
+                if(id < end) {
+                    return (chunk_it+i);
+                }
+            }
             return this->end();
         }
 
