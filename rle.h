@@ -77,6 +77,7 @@ namespace compress {
             }
         }
 
+        // add single value
         void add(const base_t &val) {
             if(_rle._chunks.empty() || _rle._uncompressed_size < 1) {
                 init(val);
@@ -92,6 +93,26 @@ namespace compress {
                 compute_lookup();
             }
             _rle._uncompressed_size++;
+        }
+
+        // add chunk
+        void add(const size_t &num, const base_t &val) {
+            _rle._uncompressed_size += num;
+
+            if(_rle._chunks.empty()) {
+                _rle._chunks.push_back({ num, val });
+                compute_lookup();
+                return;
+            }
+
+            auto &last = _rle._chunks.back();
+            if(last._value == val) {
+                last._repetitions += num;
+                return;
+            }
+
+            _rle._chunks.push_back({ num, val });
+            compute_lookup();
         }
 
     public:
@@ -134,41 +155,6 @@ namespace compress {
                     }
                 }
             }
-/*
-            bool smaller = false;
-            bool bigger = false;
-            if(_lookups.size() > 1) {
-                for(int i = _lookups.size()/2; i < _lookups.size() && i >= 0;) {
-                    size_t loc_end = _lookups[i].block_end;
-                    if(id == loc_end) {
-                        adv = _lookups[i].iter_distance;
-                        end = loc_end;
-                        break;
-                    }
-                    else if(id < loc_end && !bigger) {
-                        smaller = true;
-                        i--;
-                        continue;
-                    }
-                    else if(id > loc_end && !smaller) {
-                        bigger = true;
-                        i++;
-                        continue;
-                    }
-
-                    if(smaller) {
-                        adv = _lookups[i].iter_distance;
-                        end = loc_end;
-                        break;
-                    }
-                    if(bigger) {
-                        adv = _lookups[i-1].iter_distance;
-                        end = loc_end;
-                        break;
-                    }
-                }
-            }
-*/
 /*
             for(int i = 0; i < _lookups.size(); i++) {
                 if(id < _lookups[i].block_end) {
@@ -249,6 +235,15 @@ namespace compress {
         void encode(const std::vector<base_t> &buf) {
             for (size_t x = 0; x < buf.size(); x++) {
                 add(buf.at(x));
+            }
+            compute_lookup();
+        }
+
+        void encode(const std::vector<std::pair<size_t, base_t>> &buf) {
+            for (size_t x = 0; x < buf.size(); x++) {
+                const auto &p = buf[x];
+                if(p.first == 0) continue;
+                add(p.first, p.second);
             }
             compute_lookup();
         }
