@@ -61,7 +61,6 @@ namespace compress {
             const size_t num_chunks = _rle._chunks.size();
             for(int i = 0; i < _lu_size; i++) {
                 _chunk_lut[i] = _rle._chunks[_lu_perc*(i+1) * num_chunks]._prev_block_end;
-                //std::cout << i << "; " << _chunk_lut[i] << std::endl;
             } 
         }
 
