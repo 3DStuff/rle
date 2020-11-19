@@ -215,10 +215,11 @@ namespace compress {
 
         //! parallel rle -> array
         std::vector<base_t> decode() const {
-            std::vector<base_t> buf;
+            std::vector<base_t> buf(_rle._uncompressed_size, 0);
+            size_t id = 0;
             for (const auto &iter : _rle._chunks) {
                 for(int i = 0; i < iter._repetitions; i++) {
-                    buf.push_back(iter._value);
+                    buf[id++] = iter._value;
                 }
             }
             return buf;
