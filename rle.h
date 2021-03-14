@@ -8,19 +8,14 @@
 
 
 namespace compress {
-    template <typename T> class rle;
-
     // Needs to be packed because is directly written into file
+#pragma pack(push, 1)
     template<class base_t>
-    class rle_chunk {
-    friend class rle<base_t>;
-
-    private:
+    struct rle_chunk {
         base_t _value = 0;
         size_t _repetitions = 0;
         size_t _prev_block_end = 0; // stop id of last block
 
-    public:
         rle_chunk() = default;
         rle_chunk(const base_t &val, const size_t repetitions = 1, const size_t last_block_end = 0) 
         : _value(val), _repetitions(repetitions), _prev_block_end(last_block_end)
@@ -32,7 +27,8 @@ namespace compress {
         operator base_t&() {
             return _value;
         }
-    } __attribute__((packed));
+    };
+#pragma pack(pop)
 
     template<class base_t>
     struct rle_meta {
@@ -52,7 +48,7 @@ namespace compress {
         // step for lookup
         size_t _step = 1;
         // lookup table
-        static constexpr float _lu_perc = 0.02;
+        static constexpr float _lu_perc = 0.02f;
         static constexpr int _lu_size = (size_t)(1.f/_lu_perc)-1;
         std::array<size_t, _lu_size> _chunk_lut;
 
