@@ -8,12 +8,23 @@
 
 
 namespace compress {
+    template <typename T> class rle;
+
     // Needs to be packed because is directly written into file
     template<class base_t>
-    struct rle_chunk {
-        size_t _repetitions;
-        base_t _value;
-        size_t _prev_block_end; // stop id of last block
+    class rle_chunk {
+    friend class rle<base_t>;
+
+    private:
+        base_t _value = 0;
+        size_t _repetitions = 0;
+        size_t _prev_block_end = 0; // stop id of last block
+
+    public:
+        rle_chunk() = default;
+        rle_chunk(const base_t &val, const size_t repetitions = 1, const size_t last_block_end = 0) 
+        : _value(val), _repetitions(repetitions), _prev_block_end(last_block_end)
+        {}
 
         operator base_t() const {
             return _value;
@@ -49,7 +60,7 @@ namespace compress {
         void init(const base_t &val) {
             clear();
             _rle._uncompressed_size = 1;
-            _rle._chunks = {{ 1, val }};
+            _rle._chunks = { rle_chunk(val, 1) };
         }
 
         void compute_step() {
@@ -77,7 +88,8 @@ namespace compress {
                 back->_repetitions++;
             }
             else {
-                _rle._chunks.push_back({ 1, val, _rle._uncompressed_size });
+                const rle_chunk chunk(val, 1, _rle._uncompressed_size);
+                _rle._chunks.push_back(chunk);
             }
             _rle._uncompressed_size++;
             compute_step();
@@ -86,7 +98,7 @@ namespace compress {
         // add chunk
         void add(const size_t &num, const base_t &val) {
             if(_rle._chunks.empty()) {
-                _rle._chunks.push_back({ num, val, _rle._uncompressed_size });
+                _rle._chunks.push_back(rle_chunk(val, num, _rle._uncompressed_size));
                 _rle._uncompressed_size += num;
                 compute_step();
                 return;
@@ -100,7 +112,7 @@ namespace compress {
                 return;
             }
 
-            _rle._chunks.push_back({ num, val, _rle._uncompressed_size });
+            _rle._chunks.push_back(rle_chunk(val, num, _rle._uncompressed_size));
             _rle._uncompressed_size += num;
             compute_step();
         }
@@ -126,7 +138,7 @@ namespace compress {
 
         //! get iterator to a chunk containing the index
         //! aim to keep access time +/- constant
-        const auto at(const size_t id) const {
+        auto at(const size_t id) const {
             size_t adv = 0;
             size_t end = 0;
 
@@ -149,7 +161,7 @@ namespace compress {
 
             // here why walk with coarse steps over the chunks
             // before using a fine search
-            for(int i = adv; i < _rle._chunks.size(); i += _step) {
+            for(size_t i = adv; i < _rle._chunks.size(); i += _step) {
                 if(id < _rle._chunks[i]._prev_block_end) {
                     break;
                 }
@@ -158,7 +170,7 @@ namespace compress {
             }
 
             // continue with fine search
-            for(int i = adv; i < _rle._chunks.size(); i++) {
+            for(size_t i = adv; i < _rle._chunks.size(); i++) {
                 end += _rle._chunks[i]._repetitions;
                 if(id < end) {
                     return (this->begin()+i);
@@ -169,23 +181,23 @@ namespace compress {
 
         //! returns an iterator to an element in the rle array at a given position
         //! iterator::end() if nothing was found
-        const auto operator [] (const size_t id) const {
+        auto operator [] (const size_t id) const {
             return at(id);
         }
 
-        const auto rbegin() const {
+        auto rbegin() const {
             return _rle._chunks.rbegin();
         }
 
-        const auto rend() const {
+        auto rend() const {
             return _rle._chunks.rend();
         }
 
-        const auto begin() const {
+        auto begin() const {
             return _rle._chunks.begin();
         }
 
-        const auto end() const {
+        auto end() const {
             return _rle._chunks.end();
         }
 
@@ -207,7 +219,7 @@ namespace compress {
 
                 // change or delete current chunk
                 chunk._repetitions = frnt_reps;
-                it = _rle._chunks.insert(it, {back_reps, chunk._value});
+                it = _rle._chunks.insert(it, rle_chunk(chunk._value, back_reps));
                 _rle._chunks.insert(it, {mid_reps, val});
                 break;
             } 
@@ -218,7 +230,7 @@ namespace compress {
             std::vector<base_t> buf(_rle._uncompressed_size, 0);
             size_t id = 0;
             for (const auto &iter : _rle._chunks) {
-                for(int i = 0; i < iter._repetitions; i++) {
+                for(size_t i = 0; i < iter._repetitions; i++) {
                     buf[id++] = iter._value;
                 }
             }

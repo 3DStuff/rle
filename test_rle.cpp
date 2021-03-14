@@ -40,7 +40,7 @@ std::vector<int> enc3(std::vector<int> arr) {
     rle<int> a(arr);
     
     std::vector<int> b;
-    for(int i = 0; i < arr.size(); i++) {
+    for(size_t i = 0; i < arr.size(); i++) {
         int v = *a[i];
         b.push_back(v);
     }
@@ -125,7 +125,7 @@ auto test8 = test_io(ref6);
 TEST(RLETest, ArrayComparison1) {
     ASSERT_EQ(ref1.size(), test1.size()) << "Vectors x and y are of unequal length";
 
-    for (int i = 0; i < ref1.size(); ++i) {
+    for (size_t i = 0; i < ref1.size(); ++i) {
         EXPECT_EQ(ref1[i], test1[i]) << "Vectors x and y differ at index " << i;
     }
 }
@@ -133,7 +133,7 @@ TEST(RLETest, ArrayComparison1) {
 TEST(RLETest, ArrayComparison2) {
     ASSERT_EQ(ref2.size(), test2.size()) << "Vectors x and y are of unequal length";
 
-    for (int i = 0; i < ref2.size(); ++i) {
+    for (size_t i = 0; i < ref2.size(); ++i) {
         EXPECT_EQ(ref2[i], test2[i]) << "Vectors x and y differ at index " << i;
     }
 }
@@ -141,7 +141,7 @@ TEST(RLETest, ArrayComparison2) {
 TEST(RLETest, ArrayComparison3) {
     ASSERT_EQ(ref3.size(), test3.size()) << "Vectors x and y are of unequal length";
 
-    for (int i = 0; i < ref3.size(); ++i) {
+    for (size_t i = 0; i < ref3.size(); ++i) {
         EXPECT_EQ(ref3[i], test3[i]) << "Vectors x and y differ at index " << i;
     }
 }
@@ -149,7 +149,7 @@ TEST(RLETest, ArrayComparison3) {
 TEST(RLETest, ArrayComparison4) {
     ASSERT_EQ(ref4.size(), test4.size()) << "Vectors x and y are of unequal length";
 
-    for (int i = 0; i < ref4.size(); ++i) {
+    for (size_t i = 0; i < ref4.size(); ++i) {
         EXPECT_EQ(ref4[i], test4[i]) << "Vectors x and y differ at index " << i;
     }
 }
@@ -157,7 +157,7 @@ TEST(RLETest, ArrayComparison4) {
 TEST(RLETest, ArrayComparison5) {
     ASSERT_EQ(ref5.size(), test5.size()) << "Vectors x and y are of unequal length";
 
-    for (int i = 0; i < ref5.size(); ++i) {
+    for (size_t i = 0; i < ref5.size(); ++i) {
         EXPECT_EQ(ref5[i], test5[i]) << "Vectors x and y differ at index " << i;
     }
 }
@@ -166,7 +166,7 @@ TEST(RLETest, ArrayComparison5) {
 TEST(RLETest, ArrayComparison6) {
     ASSERT_EQ(ref3.size(), test6.size()) << "Vectors x and y are of unequal length";
 
-    for (int i = 0; i < ref3.size(); ++i) {
+    for (size_t i = 0; i < ref3.size(); ++i) {
         EXPECT_EQ(ref3[i], test6[i]) << "Vectors x and y differ at index " << i;
     }
 }
@@ -174,7 +174,7 @@ TEST(RLETest, ArrayComparison6) {
 TEST(RLETest, ArrayComparison7) {
     ASSERT_EQ(ref3.size(), test7.size()) << "Vectors x and y are of unequal length";
 
-    for (int i = 0; i < ref3.size(); ++i) {
+    for (size_t i = 0; i < ref3.size(); ++i) {
         EXPECT_EQ(ref3[i], test7[i]) << "Vectors x and y differ at index " << i;
     }
 }
@@ -183,7 +183,7 @@ TEST(RLETest, ArrayComparison7) {
 TEST(RLETest, ArrayComparison8) {
     ASSERT_EQ(ref6.size(), test8.size()) << "Vectors x and y are of unequal length";
 
-    for (int i = 0; i < ref6.size(); ++i) {
+    for (size_t i = 0; i < ref6.size(); ++i) {
         EXPECT_EQ(ref6[i], test8[i]) << "Vectors x and y differ at index " << i;
     }
 }
