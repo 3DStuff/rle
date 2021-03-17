@@ -11,16 +11,16 @@ namespace compress {
     class rle_io {
     private:
         rle<base_t> _rle;
-        std::vector<size_t> _meta;
+        std::vector<int> _meta;
 
     public:
         rle_io() = default;
-        rle_io(const rle<base_t> &rle, const std::vector<size_t> &meta = {}) 
+        rle_io(const rle<base_t> &rle, const std::vector<int> &meta = {}) 
         : _rle(rle), _meta(meta) 
         {}
 
         //! return meta information: e.g. size of defined x,y,z, ... dimensions
-        const std::vector<size_t> &meta() const {
+        const std::vector<int> &meta() const {
             return _meta;
         }
 
@@ -43,8 +43,8 @@ namespace compress {
             size_t nr_meta;
             f.read((char*)&nr_meta, sizeof(size_t));
             for(size_t i = 0; i < nr_meta; i++) {
-                size_t meta;
-                f.read((char*)&meta, sizeof(size_t));
+                int meta;
+                f.read((char*)&meta, sizeof(int));
                 _meta.push_back(meta);
             }
 
@@ -58,6 +58,7 @@ namespace compress {
                 _rle.data()._chunks.push_back(chunk);
                 _rle.compute_step();
             }
+            f.close();
         }
 
         void to_file(const std::string &file) {
@@ -66,8 +67,8 @@ namespace compress {
             // first meta info
             size_t nr_meta = _meta.size();
             f.write((char*)&nr_meta, sizeof(size_t));
-            for(size_t m : _meta) {
-                f.write((char*)&m, sizeof(size_t));
+            for(int m : _meta) {
+                f.write((char*)&m, sizeof(int));
             }
 
             std::cout << "Pack with: " << sizeof(rle_chunk<base_t>) << " bytes\n";
@@ -75,10 +76,11 @@ namespace compress {
             // second rle data
             size_t chunks = _rle.data()._chunks.size();
             f.write((char*)&chunks, sizeof(size_t));
-            f.write((char*)&_rle.data()._uncompressed_size, sizeof(size_t));
-            for(const auto &chunk : _rle.data()._chunks) {
-                f.write((char*)&chunk, sizeof(rle_chunk<base_t>));
+            if(chunks > 0) {
+                f.write((char*)&_rle.data()._uncompressed_size, sizeof(size_t));
+                f.write((char*)&_rle.data()._chunks[0], chunks * sizeof(rle_chunk<base_t>));
             }
+            f.close();
         }
     };
 };
